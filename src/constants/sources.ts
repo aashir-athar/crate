@@ -9,7 +9,9 @@ import type { SourceKind } from '@/types/models';
  * - Internet Archive needs no key or auth for public read/search/download.
  * - Audius needs only a free-form `app_name` courtesy identifier (not a secret).
  */
-export const DEFAULT_JAMENDO_CLIENT_ID = '';
+// Read from a git-ignored .env.local (EXPO_PUBLIC_ vars are inlined at build time);
+// falls back to empty so the repo never ships a key. The Settings screen can override it.
+export const DEFAULT_JAMENDO_CLIENT_ID = process.env.EXPO_PUBLIC_JAMENDO_CLIENT_ID ?? '';
 export const DEFAULT_AUDIUS_APP_NAME = 'crate-offline-player';
 
 export const SOURCE_BASE_URLS = {
