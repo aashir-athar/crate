@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -107,10 +107,20 @@ export default function SettingsScreen() {
   const stats = getStorageStats();
   void version;
 
-  const onToggleAutoSync = (value: boolean) => {
+  const onToggleAutoSync = async (value: boolean) => {
     setAutoSync(value);
-    if (value) void registerPlaylistSync();
-    else void unregisterPlaylistSync();
+    if (value) {
+      const ok = await registerPlaylistSync();
+      if (!ok) {
+        setAutoSync(false);
+        Alert.alert(
+          'Background sync unavailable',
+          'Your device has background tasks restricted. Crate will still sync when you open the app.',
+        );
+      }
+    } else {
+      await unregisterPlaylistSync();
+    }
   };
 
   const switchColors = { false: theme.colors.surfaceSunken, true: theme.colors.accent };

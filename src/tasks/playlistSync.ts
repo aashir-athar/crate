@@ -19,25 +19,29 @@ TaskManager.defineTask(PLAYLIST_SYNC_TASK, async () => {
   }
 });
 
-export async function registerPlaylistSync(): Promise<void> {
+export async function registerPlaylistSync(): Promise<boolean> {
   try {
     const status = await BackgroundTask.getStatusAsync();
-    if (status === BackgroundTask.BackgroundTaskStatus.Restricted) return;
+    if (status === BackgroundTask.BackgroundTaskStatus.Restricted) return false;
     const alreadyRegistered = await TaskManager.isTaskRegisteredAsync(PLAYLIST_SYNC_TASK);
     if (!alreadyRegistered) {
       await BackgroundTask.registerTaskAsync(PLAYLIST_SYNC_TASK, { minimumInterval: 15 });
     }
+    return true;
   } catch (error) {
     logger.warn('registerPlaylistSync failed', { error: String(error) });
+    return false;
   }
 }
 
-export async function unregisterPlaylistSync(): Promise<void> {
+export async function unregisterPlaylistSync(): Promise<boolean> {
   try {
     if (await TaskManager.isTaskRegisteredAsync(PLAYLIST_SYNC_TASK)) {
       await BackgroundTask.unregisterTaskAsync(PLAYLIST_SYNC_TASK);
     }
+    return true;
   } catch (error) {
     logger.warn('unregisterPlaylistSync failed', { error: String(error) });
+    return false;
   }
 }

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -83,6 +83,8 @@ export default function ImportScreen() {
     try {
       const result = importResolved(preview);
       router.replace({ pathname: '/collection/[id]', params: { id: result.collectionId } });
+    } catch (err) {
+      Alert.alert('Import failed', err instanceof Error ? err.message : 'Could not import this crate.');
     } finally {
       setImporting(false);
     }

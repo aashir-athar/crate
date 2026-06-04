@@ -24,9 +24,10 @@ export async function getJson<T>(url: string, options: GetJsonOptions = {}): Pro
   const { timeoutMs = DEFAULT_TIMEOUT_MS, userAgent = false, signal } = options;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const onAbort = () => controller.abort();
   if (signal) {
     if (signal.aborted) controller.abort();
-    else signal.addEventListener('abort', () => controller.abort(), { once: true });
+    else signal.addEventListener('abort', onAbort, { once: true });
   }
   try {
     const headers: Record<string, string> = { Accept: 'application/json' };
@@ -43,6 +44,7 @@ export async function getJson<T>(url: string, options: GetJsonOptions = {}): Pro
     throw err;
   } finally {
     clearTimeout(timeout);
+    if (signal) signal.removeEventListener('abort', onAbort);
   }
 }
 

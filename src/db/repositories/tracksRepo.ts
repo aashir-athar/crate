@@ -1,5 +1,5 @@
 import { newId } from '@/lib/ids';
-import type { DownloadState, ResolvedTrack, Track } from '@/types/models';
+import type { DownloadState, ResolvedTrack, SourceKind, Track } from '@/types/models';
 
 import { db } from '../client';
 
@@ -11,7 +11,7 @@ export function getTrackById(id: string): Track | null {
   return db.getFirstSync<Track>('SELECT * FROM tracks WHERE id = ?', [id]) ?? null;
 }
 
-export function getTrackBySource(sourceKind: string, sourceTrackId: string): Track | null {
+export function getTrackBySource(sourceKind: SourceKind, sourceTrackId: string): Track | null {
   return (
     db.getFirstSync<Track>(
       'SELECT * FROM tracks WHERE sourceKind = ? AND sourceTrackId = ?',

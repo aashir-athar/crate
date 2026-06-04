@@ -233,36 +233,48 @@ export const usePlayer = create<PlayerStore>((set, get) => ({
     const currentId = state.currentTrackId;
     if (trackId === currentId) return; // already the current track
     const queue = state.queueTrackIds.filter((id) => id !== trackId);
+    const order = state.originalOrder.filter((id) => id !== trackId);
     if (!currentId) {
       queue.unshift(trackId);
-      set({ queueTrackIds: queue, currentIndex: 0 });
+      order.unshift(trackId);
+      set({ queueTrackIds: queue, originalOrder: order, currentIndex: 0 });
       loadIndex(0, true);
       return;
     }
     // Insert right after the still-playing track, then recompute its index so
     // currentIndex never drifts away from currentTrackId (e.g. re-queueing an
-    // earlier track shifts later elements left).
+    // earlier track shifts later elements left). Keep originalOrder in sync so a
+    // later un-shuffle restores a correct, complete list.
     const currentPos = queue.indexOf(currentId);
     const insertAt = currentPos >= 0 ? currentPos + 1 : state.currentIndex + 1;
     queue.splice(insertAt, 0, trackId);
+    const orderPos = order.indexOf(currentId);
+    order.splice(orderPos >= 0 ? orderPos + 1 : order.length, 0, trackId);
     const newIndex = queue.indexOf(currentId);
-    set({ queueTrackIds: queue, currentIndex: newIndex >= 0 ? newIndex : state.currentIndex });
+    set({
+      queueTrackIds: queue,
+      originalOrder: order,
+      currentIndex: newIndex >= 0 ? newIndex : state.currentIndex,
+    });
   },
 
   removeFromQueue: (index) => {
     const state = get();
     if (index < 0 || index >= state.queueTrackIds.length) return;
+    const removedId = state.queueTrackIds[index];
     const removingCurrent = index === state.currentIndex;
     const queue = state.queueTrackIds.filter((_, i) => i !== index);
+    const order = state.originalOrder.filter((id) => id !== removedId);
     let currentIndex = state.currentIndex;
     if (index < state.currentIndex) currentIndex -= 1;
     if (queue.length === 0) {
       ensurePlayer().pause();
-      set({ queueTrackIds: [], currentIndex: 0, currentTrackId: null, isPlaying: false });
+      set({ queueTrackIds: [], originalOrder: [], currentIndex: 0, currentTrackId: null, isPlaying: false });
       return;
     }
-    set({ queueTrackIds: queue, currentIndex: Math.min(currentIndex, queue.length - 1) });
-    if (removingCurrent) loadIndex(Math.min(currentIndex, queue.length - 1), state.isPlaying);
+    const clamped = Math.min(currentIndex, queue.length - 1);
+    set({ queueTrackIds: queue, originalOrder: order, currentIndex: clamped });
+    if (removingCurrent) loadIndex(clamped, state.isPlaying);
   },
 
   clearQueue: () => {

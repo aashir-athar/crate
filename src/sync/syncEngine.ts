@@ -3,7 +3,7 @@ import { bumpLibrary } from '@/db/reactivity';
 import * as collectionsRepo from '@/db/repositories/collectionsRepo';
 import * as tracksRepo from '@/db/repositories/tracksRepo';
 import { deleteFileSafe } from '@/download/fs';
-import { enqueueMany } from '@/download/downloadManager';
+import { cancelDownload, enqueueMany } from '@/download/downloadManager';
 import { logger } from '@/lib/logger';
 import { detectSourceFromUrl, getAdapter } from '@/sources/registry';
 import type { ResolvedCollection, SearchResult } from '@/sources/types';
@@ -49,13 +49,14 @@ function cleanupOrphans(): void {
 
 /** Resolve a pasted URL into a preview without persisting anything. */
 export async function previewUrl(url: string): Promise<ResolvedCollection> {
-  const adapter = detectSourceFromUrl(url);
+  const normalized = url.trim();
+  const adapter = detectSourceFromUrl(normalized);
   if (!adapter) {
     throw new Error(
       'That link is not from a supported source. Use a Jamendo, Internet Archive, or Audius URL.',
     );
   }
-  return adapter.resolveUrl(url);
+  return adapter.resolveUrl(normalized);
 }
 
 /** Persist a resolved collection + its tracks, then auto-enqueue downloads. */
@@ -191,6 +192,20 @@ function reconstructUrl(result: SearchResult): string {
 
 /** Delete a crate and any tracks/files it leaves orphaned. */
 export function removeCollection(collectionId: string): void {
+  // Cancel any in-flight downloads for this crate first, so a transfer that
+  // finishes after deletion can't leave an orphaned file. Downloaded tracks are
+  // left untouched so cleanupOrphans can still delete their files.
+  for (const trackId of tracksRepo.getTrackIdsByCollection(collectionId)) {
+    const track = tracksRepo.getTrackById(trackId);
+    if (
+      track &&
+      (track.downloadState === 'downloading' ||
+        track.downloadState === 'queued' ||
+        track.downloadState === 'paused')
+    ) {
+      cancelDownload(trackId);
+    }
+  }
   collectionsRepo.deleteCollection(collectionId);
   cleanupOrphans();
   bumpLibrary();

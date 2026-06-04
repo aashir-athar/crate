@@ -48,7 +48,9 @@ async function onWifi(): Promise<boolean> {
     const state = await Network.getNetworkStateAsync();
     return state.type === Network.NetworkStateType.WIFI;
   } catch {
-    return true; // fail open; never block downloads on a detection error
+    // Fail closed: onWifi is only consulted in Wi-Fi-only mode, so a detection
+    // failure should hold the download rather than risk a cellular transfer.
+    return false;
   }
 }
 
@@ -235,6 +237,11 @@ export function reconcileDownloads(): void {
       deleteFileSafe(track.relativePath);
       tracksRepo.updateDownloadState(track.id, 'remote');
     }
+  }
+  // Reconciliation may have reset tracks to 'remote', so refresh the denormalized
+  // per-collection downloaded counts.
+  for (const collection of collectionsRepo.getAllCollections()) {
+    collectionsRepo.recomputeCounts(collection.id);
   }
   bumpLibrary();
 }

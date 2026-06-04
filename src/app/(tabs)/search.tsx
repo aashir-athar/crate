@@ -137,7 +137,12 @@ export default function SearchScreen() {
             returnKeyType="search"
           />
           {query.length > 0 ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={theme.hitSlop}>
+            <Pressable
+              onPress={() => setQuery('')}
+              hitSlop={theme.hitSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+            >
               <Ionicons name="close-circle" size={18} color={theme.colors.textTertiary} />
             </Pressable>
           ) : null}

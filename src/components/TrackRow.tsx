@@ -74,7 +74,9 @@ function TrackRowImpl({ track, onPress, onLongPress, isActive = false }: Props) 
       onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
-      accessibilityHint="Plays this track. Long press for options."
+      accessibilityHint={
+        onLongPress ? 'Plays this track. Long press for options.' : 'Plays this track.'
+      }
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <Artwork url={track.artworkUrl} size={48} />

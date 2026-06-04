@@ -27,7 +27,7 @@ npm install
 ## 2. Configure
 
 - **Bundle identifiers** are already set in `app.json` (`com.aashirathar.crate`). Change them to your own org if publishing yourself.
-- **Jamendo:** Internet Archive & Audius need no key. For Jamendo, get a free `client_id` at [devportal.jamendo.com](https://devportal.jamendo.com) and paste it into **Settings → Jamendo client ID** in the running app (it is stored locally, never committed).
+- **Jamendo:** Internet Archive & Audius need no key. For Jamendo, get a free `client_id` at [devportal.jamendo.com](https://devportal.jamendo.com). The `EXPO_PUBLIC_JAMENDO_CLIENT_ID` env var (in a git-ignored `.env.local`) only **seeds the build-time default**; at runtime the value entered in **Settings → Jamendo client ID** is persisted on-device (via `useSettings` → `runtimeConfig`) and **takes precedence**. Either way, no key is committed to the repo.
 
 ---
 

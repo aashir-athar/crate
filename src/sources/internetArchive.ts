@@ -84,6 +84,13 @@ function fileUrl(identifier: string, fileName: string): string {
   return `${BASE}/download/${enc(identifier)}/${enc(fileName)}`;
 }
 
+// A genuinely permissive license: Creative Commons or public domain. Anything
+// else (incl. an unrecognized "Custom license" URL) is treated as stream-only.
+function isPermissiveLicenseUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return parseLicense(url).name === 'Public Domain' || url.includes('creativecommons.org');
+}
+
 async function itemToCollection(identifier: string, sourceUrl: string): Promise<ResolvedCollection> {
   const data = await getJson<IaMetadataResponse>(`${BASE}/metadata/${enc(identifier)}`, {
     userAgent: true,
@@ -98,11 +105,7 @@ async function itemToCollection(identifier: string, sourceUrl: string): Promise<
   const licenseUrl = meta?.licenseurl ?? null;
   const streamOnly = collectionList(meta).includes('stream_only');
   const itemLicense = parseLicense(licenseUrl);
-  // Only treat genuinely permissive licenses (Creative Commons / public domain)
-  // as downloadable. An unrecognized / "Custom license" URL is stream-only.
-  const permissive =
-    Boolean(licenseUrl) &&
-    (itemLicense.name === 'Public Domain' || (licenseUrl?.includes('creativecommons.org') ?? false));
+  const permissive = isPermissiveLicenseUrl(licenseUrl);
   const artist = firstString(meta?.creator);
   const albumTitle = meta?.title ?? identifier;
   const artworkUrl = `${BASE}/services/img/${enc(identifier)}`;
@@ -110,14 +113,16 @@ async function itemToCollection(identifier: string, sourceUrl: string): Promise<
   const audioFiles = (data.files ?? []).filter((f) => isPlayableAudio(f.format));
   const mp3Files = audioFiles.filter((f) => /mp3/i.test(f.format ?? ''));
   const chosen = mp3Files.length > 0 ? mp3Files : audioFiles;
-  const hasFlac = audioFiles.some((f) => /flac/i.test(f.format ?? ''));
-
   const isDownloadable = permissive && !streamOnly;
 
   const tracks: ResolvedTrack[] = chosen.map((file) => {
     const url = fileUrl(identifier, file.name);
-    const qualities: AudioQuality[] = ['mp32'];
-    if (hasFlac) qualities.push('flac');
+    const fmt = (file.format ?? '').toLowerCase();
+    const quality: AudioQuality = /flac/.test(fmt)
+      ? 'flac'
+      : /ogg|vorbis/.test(fmt)
+        ? 'ogg'
+        : 'mp32';
     return {
       sourceKind: 'internet_archive',
       sourceTrackId: file.name,
@@ -128,8 +133,8 @@ async function itemToCollection(identifier: string, sourceUrl: string): Promise<
       artworkUrl,
       downloadUrl: isDownloadable ? url : null,
       streamUrl: url,
-      availableQualities: qualities,
-      bestQuality: 'mp32',
+      availableQualities: [quality],
+      bestQuality: quality,
       license: itemLicense,
       isDownloadable,
     };
@@ -180,7 +185,7 @@ export const internetArchiveAdapter: SourceAdapter = {
         title: doc.title ?? doc.identifier,
         subtitle: firstString(doc.creator),
         artworkUrl: `${BASE}/services/img/${enc(doc.identifier)}`,
-        isDownloadable: Boolean(doc.licenseurl),
+        isDownloadable: isPermissiveLicenseUrl(doc.licenseurl),
       }));
     const total = data.response?.numFound ?? null;
     return {

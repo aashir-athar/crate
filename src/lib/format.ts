@@ -28,7 +28,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 
 /** Epoch ms -> "just now" / "5m ago" / "3h ago" / "2d ago" / locale date. */
 export function formatRelativeTime(epochMs: number | null | undefined): string {
-  if (epochMs == null) return 'never';
+  if (epochMs == null || !Number.isFinite(epochMs)) return 'never';
   const diffMs = Date.now() - epochMs;
   if (diffMs < 0) return 'just now';
   const minutes = Math.floor(diffMs / 60_000);

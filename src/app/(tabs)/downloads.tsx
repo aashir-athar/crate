@@ -62,7 +62,7 @@ export default function DownloadsScreen() {
         .filter((job) => job.state !== 'downloaded' && job.state !== 'remote')
         .map((job) => ({ job, track: getTrackById(job.trackId) }))
         .filter((entry): entry is { job: DownloadJob; track: Track } => entry.track !== null),
-    [jobs],
+    [jobs, version],
   );
 
   const stats = useMemo(() => getStorageStats(), [version]);
