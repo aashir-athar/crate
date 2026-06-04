@@ -125,7 +125,9 @@ async function itemToCollection(identifier: string, sourceUrl: string): Promise<
         : 'mp32';
     return {
       sourceKind: 'internet_archive',
-      sourceTrackId: file.name,
+      // Namespace by item identifier: file names like "01.mp3" are only unique
+      // within an item, but track identity is keyed on (sourceKind, sourceTrackId).
+      sourceTrackId: `${identifier}/${file.name}`,
       title: file.title ?? cleanName(file.name),
       artist,
       album: albumTitle,

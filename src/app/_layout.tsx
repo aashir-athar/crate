@@ -13,6 +13,7 @@ import { initDatabase } from '@/db/client';
 import { reconcileDownloads } from '@/download/downloadManager';
 import { configureAudio } from '@/player/setupPlayer';
 import { asyncStoragePersister, queryClient } from '@/storage/queryClient';
+import { useSettings } from '@/storage/settingsStore';
 import { foregroundSync } from '@/sync/syncEngine';
 import { registerPlaylistSync } from '@/tasks/playlistSync'; // imports register the bg task (defineTask at module scope)
 
@@ -23,13 +24,28 @@ export default function RootLayout() {
     initDatabase();
     reconcileDownloads();
     void configureAudio();
-    void registerPlaylistSync();
-    void foregroundSync();
+
+    // Wait for persisted settings to rehydrate before the first sync, so a user
+    // who disabled auto-sync isn't synced/registered from the default `true`.
+    const startup = () => {
+      if (!useSettings.getState().autoSyncEnabled) return;
+      void registerPlaylistSync();
+      void foregroundSync();
+    };
+    let unsubscribeHydration: (() => void) | undefined;
+    if (useSettings.persist.hasHydrated()) {
+      startup();
+    } else {
+      unsubscribeHydration = useSettings.persist.onFinishHydration(startup);
+    }
 
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') void foregroundSync();
     });
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+      unsubscribeHydration?.();
+    };
   }, []);
 
   return (

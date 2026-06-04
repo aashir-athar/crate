@@ -95,6 +95,15 @@ async function runDownload(track: Track): Promise<void> {
   const ext = extFromUrl(url) ?? extForQuality(audioQuality);
   const relativePath = relativePathFor(track.id, ext);
   const file = new File(tracksDir(), `${track.id}.${ext}`);
+  // A killed/interrupted attempt can leave a partial file; the download task
+  // won't overwrite an existing destination, so clear it before retrying.
+  if (file.exists) {
+    try {
+      file.delete();
+    } catch {
+      // ignore — a real write error will surface from the download itself
+    }
+  }
 
   store.patch(track.id, { state: 'downloading', error: undefined });
   persistState(track.id, 'downloading');
