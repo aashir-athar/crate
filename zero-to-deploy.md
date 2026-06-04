@@ -47,13 +47,11 @@ This compiles the native dev client and launches Metro. Re-run only when native 
 
 ---
 
-## 4. Replace the app icon
+## 4. App icon
 
-The repo ships Expo's placeholder icon. Generate Crate's icon from [`assets/icon-prompts.json`](assets/icon-prompts.json) (Nano Banana Pro), background-remove the flat green, then export:
+Crate's icon is already generated and wired: `assets/images/icon.png` (1024×1024, opaque — iOS) plus the Android adaptive `android-icon-foreground/background/monochrome.png`, `splash-icon.png`, and `favicon.png`. The adaptive background color is `#0B0A0A` in `app.json`.
 
-- `assets/images/icon.png` — 1024×1024
-- `assets/images/android-icon-foreground.png` — 1024×1024 (transparent)
-- adaptive background color is already `#0B0A0A` in `app.json`
+To regenerate or tweak it, use the Nano Banana Pro prompts in [`assets/icon-prompts.json`](assets/icon-prompts.json), background-remove the flat green, and re-export to the same filenames.
 
 ---
 

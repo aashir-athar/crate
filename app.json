@@ -8,7 +8,6 @@
     "scheme": "crate",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.aashirathar.crate",
       "supportsTablet": true
     },
