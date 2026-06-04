@@ -1,0 +1,34 @@
+{
+  "tool": "Nano Banana Pro",
+  "notes": "Flat chroma-key green background (#00FF00) with zero glow, bloom, shadow, or particles so background removal yields a clean transparent PNG. Render the subject centered with even, neutral studio lighting. Export 1024x1024 PNG, then key out the green.",
+  "brand": {
+    "name": "Crate",
+    "palette": {
+      "charcoal": "#151313",
+      "cream": "#F5EFE7",
+      "amber": "#E8732C",
+      "cool": "#5BB0C9"
+    },
+    "personality": "warm, tactile, music-collector, premium but friendly"
+  },
+  "prompts": [
+    {
+      "id": "app-icon-primary",
+      "aspect_ratio": "1:1",
+      "prompt": "A 3D Pixar-style app icon of a small wooden record crate packed with vinyl records, one record tilted upright at the front showing a circular amber-orange label, soft rounded edges, smooth matte surfaces, warm cream and charcoal color palette with a single amber accent, clean and iconic, centered composition, gentle even studio lighting, high detail, product render. Flat solid chroma key green background, color #00FF00. No glow, no bloom, no shadow, no reflection on the background, no particles, no text.",
+      "negative_prompt": "glow, bloom, lens flare, drop shadow, ground shadow, ambient occlusion on background, gradient background, vignette, particles, sparkles, text, watermark, busy background, realistic photo"
+    },
+    {
+      "id": "android-adaptive-foreground",
+      "aspect_ratio": "1:1",
+      "prompt": "A single 3D Pixar-style upright vinyl record with a circular amber-orange center label, smooth rounded matte form, warm cream highlights, centered and sized to sit safely inside an Android adaptive-icon safe zone (subject occupies the central ~66%), gentle even studio lighting, product render. Flat solid chroma key green background, color #00FF00. No glow, no bloom, no shadow, no particles, no text.",
+      "negative_prompt": "glow, bloom, drop shadow, ground shadow, gradient background, particles, sparkles, text, watermark, edge cropping, realistic photo"
+    },
+    {
+      "id": "notification-monochrome-ref",
+      "aspect_ratio": "1:1",
+      "prompt": "A flat, single-color silhouette of an upright vinyl record inside a small crate, simple bold geometric shape suitable for a monochrome Android notification icon, solid white subject. Flat solid chroma key green background, color #00FF00. No glow, no bloom, no shadow, no gradient, no particles, no text.",
+      "negative_prompt": "glow, bloom, shadow, gradient, 3d shading, particles, text, detail, realistic photo"
+    }
+  ]
+}
