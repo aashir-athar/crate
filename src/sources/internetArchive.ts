@@ -11,6 +11,8 @@ const SEARCH_ROWS = 40;
 type IaFile = {
   name: string;
   source?: string;
+  /** For a derivative, the source file it was derived from (used to dedupe). */
+  original?: string;
   format?: string;
   length?: string | number;
   size?: string | number;
@@ -91,6 +93,23 @@ function isPermissiveLicenseUrl(url: string | null | undefined): boolean {
   return parseLicense(url).name === 'Public Domain' || url.includes('creativecommons.org');
 }
 
+// Higher is preferred when collapsing multiple derivatives of one recording:
+// VBR MP3 (best size/quality balance) > any MP3 > Ogg > FLAC original.
+function audioFormatRank(format: string | undefined): number {
+  const fmt = (format ?? '').toLowerCase();
+  if (/vbr mp3/.test(fmt)) return 4;
+  if (/mp3/.test(fmt)) return 3;
+  if (/ogg|vorbis/.test(fmt)) return 2;
+  if (/flac/.test(fmt)) return 1;
+  return 0;
+}
+
+function pickPreferredFile(files: IaFile[]): IaFile {
+  return files.reduce((best, file) =>
+    audioFormatRank(file.format) > audioFormatRank(best.format) ? file : best,
+  );
+}
+
 async function itemToCollection(identifier: string, sourceUrl: string): Promise<ResolvedCollection> {
   const data = await getJson<IaMetadataResponse>(`${BASE}/metadata/${enc(identifier)}`, {
     userAgent: true,
@@ -111,8 +130,17 @@ async function itemToCollection(identifier: string, sourceUrl: string): Promise<
   const artworkUrl = `${BASE}/services/img/${enc(identifier)}`;
 
   const audioFiles = (data.files ?? []).filter((f) => isPlayableAudio(f.format));
-  const mp3Files = audioFiles.filter((f) => /mp3/i.test(f.format ?? ''));
-  const chosen = mp3Files.length > 0 ? mp3Files : audioFiles;
+  // One item often ships several derivatives of the same recording (e.g. a VBR
+  // MP3, a low-bitrate MP3, and the FLAC original). Group by the source file and
+  // keep a single preferred derivative per recording so crates don't duplicate.
+  const groups = new Map<string, IaFile[]>();
+  for (const file of audioFiles) {
+    const key = file.original ?? file.name;
+    const group = groups.get(key);
+    if (group) group.push(file);
+    else groups.set(key, [file]);
+  }
+  const chosen = [...groups.values()].map(pickPreferredFile);
   const isDownloadable = permissive && !streamOnly;
 
   const tracks: ResolvedTrack[] = chosen.map((file) => {

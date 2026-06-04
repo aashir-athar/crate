@@ -2,6 +2,7 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
 import { logger } from '@/lib/logger';
+import { useSettings } from '@/storage/settingsStore';
 import { syncAllAuto } from '@/sync/syncEngine';
 
 export const PLAYLIST_SYNC_TASK = 'crate-playlist-sync';
@@ -11,6 +12,10 @@ export const PLAYLIST_SYNC_TASK = 'crate-playlist-sync';
 // narrow the gap between app opens; the foreground sync is the reliable path.
 TaskManager.defineTask(PLAYLIST_SYNC_TASK, async () => {
   try {
+    // Headless launch: the UI never mounts, so load the persisted settings (and
+    // the runtime source config they hydrate) before syncing, otherwise this can
+    // run with defaults (auto-sync on, wrong Wi-Fi/Jamendo settings).
+    await useSettings.persist.rehydrate();
     await syncAllAuto();
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch (error) {
