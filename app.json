@@ -51,7 +51,8 @@
       ],
       "expo-sqlite",
       "expo-background-task",
-      "expo-asset"
+      "expo-asset",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
